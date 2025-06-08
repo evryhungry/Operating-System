@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #define N_PHILOS    5
+#define CYCLES      3 
 #define THINK_TIME  1
 #define EAT_TIME    1
 
@@ -21,35 +22,59 @@ void eat(int id) {
     sleep(EAT_TIME);
 }
 
-void *philosopher(void *arg) {
-    int id    = *(int*)arg;
-    int left  = id;                    // 왼쪽 포크 인덱스
-    int right = (id + 1) % N_PHILOS;   // 오른쪽 포크 인덱스
+// void *philosopher(void *arg) {
+//     int id    = *(int*)arg;
+//     int left  = id;                    // 왼쪽 포크 인덱스
+//     int right = (id + 1) % N_PHILOS;   // 오른쪽 포크 인덱스
 
-    while (1) {
+//     while (1) {
+//         think(id);
+
+//         if (id % 2 == 0) {
+//             sem_wait(&forks[right]);
+//             printf("Philosopher %d picked up RIGHT fork (%d)\n", id, right);
+//             sem_wait(&forks[left]);
+//             printf("Philosopher %d picked up LEFT fork  (%d)\n", id, left);
+//         } else {
+//             sem_wait(&forks[left]);
+//             printf("Philosopher %d picked up LEFT fork  (%d)\n", id, left);
+//             sem_wait(&forks[right]);
+//             printf("Philosopher %d picked up RIGHT fork (%d)\n", id, right);
+//         }
+
+//         eat(id);
+
+//         sem_post(&forks[left]);
+//         sem_post(&forks[right]);
+//         printf("Philosopher %d put down both forks\n", id);
+//     }
+//     return NULL;
+// }
+
+// 유한의 경우
+void *philosopher(void *arg) {
+    int id = *(int*)arg;
+    int left = id;
+    int right = (id + 1) % N_PHILOS;
+
+    for (int i = 0; i < CYCLES; i++) {
         think(id);
 
         if (id % 2 == 0) {
-            // 짝수: 오른쪽 → 왼쪽 순서
             sem_wait(&forks[right]);
-            printf("Philosopher %d picked up RIGHT fork (%d)\n", id, right);
             sem_wait(&forks[left]);
-            printf("Philosopher %d picked up LEFT fork  (%d)\n", id, left);
         } else {
-            // 홀수: 왼쪽 → 오른쪽 순서
             sem_wait(&forks[left]);
-            printf("Philosopher %d picked up LEFT fork  (%d)\n", id, left);
             sem_wait(&forks[right]);
-            printf("Philosopher %d picked up RIGHT fork (%d)\n", id, right);
         }
 
         eat(id);
 
-        // 포크 내려놓기 (항상 왼쪽→오른쪽 순서로 해제)
         sem_post(&forks[left]);
         sem_post(&forks[right]);
-        printf("Philosopher %d put down both forks\n", id);
     }
+
+    printf("Philosopher %d is done eating %d times.\n", id, CYCLES);
     return NULL;
 }
 
